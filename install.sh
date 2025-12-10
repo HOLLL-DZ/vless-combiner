@@ -59,7 +59,9 @@ if [ ! -f "$DEPLOY_DIR/app.py" ]; then
     echo "📥 Скачиваю файлы..."
     curl -s -o "$DEPLOY_DIR/app.py" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/app.py
     mkdir -p "$DEPLOY_DIR/templates"
+    # Внутри install.sh
     curl -s -o "$DEPLOY_DIR/templates/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
+    curl -s -o "$DEPLOY_DIR/templates/index.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/index.html
 fi
 
 # Создаём config.yaml, если его нет
