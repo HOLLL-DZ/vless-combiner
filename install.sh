@@ -40,7 +40,6 @@ mkdir -p "$DEPLOY_DIR/templates"
 curl -s -o "$DEPLOY_DIR/templates/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
 
 # Обновляем app.py — заменяем маршрут админки
-sed -i "s|@app.route('/djufbsjrlhddyg/admin')|@app.route('/$ADMIN_ROUTE')|" "$DEPLOY_DIR/app.html"
 sed -i "s|@app.route('/djufbsjrlhddyg/admin')|@app.route('/$ADMIN_ROUTE')|" "$DEPLOY_DIR/app.py"
 
 # Обновляем admin.html — меняем ссылку в JavaScript
