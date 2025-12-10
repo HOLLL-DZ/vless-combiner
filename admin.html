@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>Админка: Управление подписками</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2c3e50;
+            --secondary: #3498db;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --light: #f8f9fa;
+            --dark: #34495e;
+            --gray: #bdc3c7;
+            --white: #ffffff;
+            --shadow: 0 4px 12px rgba(0,0,0,0.08);
+            --card-bg: #ffffff;
+            --border: #dee2e6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: var(--light);
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid var(--secondary);
+            position: relative;
+        }
+
+        .header i {
+            font-size: 2rem;
+            color: var(--primary);
+        }
+
+        .header h1 {
+            font-size: 1.8rem;
+            color: var(--primary);
+            font-weight: 600;
+        }
+
+        .server-info {
+            position: absolute;
+            right: 0;
+            top: 0;
+            background: var(--card-bg);
+            padding: 12px 16px;
+            border-radius: 8px;
+            box-shadow: var(--shadow);
+            font-size: 13px;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-width: 200px;
+        }
+
+        .server-info i {
+            font-size: 1rem;
+            color: var(--secondary);
+        }
+
+        .server-info span {
+            font-weight: 500;
+        }
+
+        .copy-ip-btn {
+            background: var(--secondary);
+            color: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .copy-ip-btn:hover {
+            background: #2980b9;
+        }
+
+        .actions {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* === ЖЁСТКИЕ СТИЛИ ДЛЯ ВСЕХ КНОПОК — УБИРАЕМ ОБВОДКУ НАВЕРНЯКА === */
+        button,
+        .btn,
+        .check-btn,
+        .copy-btn,
+        .delete-btn,
+        .add-url-btn,
+        .delete-group-btn {
+            border: none !important;
+            outline: none !important;
+            box-shadow: none !important;
+            background-color: inherit !important;
+            color: inherit !important;
+            font-family: inherit !important;
+            font-size: inherit !important;
+            padding: 8px 16px !important;
+            border-radius: 6px !important;
+            cursor: pointer !important;
+            transition: all 0.2s ease !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 8px !important;
+            font-weight: 600 !important;
+            text-decoration: none !important;
+        }
+
+        .btn-primary {
+            background: var(--secondary) !important;
+            color: white !important;
+        }
+
+        .btn-success {
+            background: var(--success) !important;
+            color: white !important;
+        }
+
+        .btn-danger {
+            background: var(--danger) !important;
+            color: white !important;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px) !important;
+        }
+
+        .groups-container {
+            display: grid;
+            gap: 20px;
+        }
+
+        .group-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: var(--shadow);
+            border-left: 4px solid var(--secondary);
+            transition: transform 0.2s ease;
+        }
+
+        .group-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .group-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .group-id {
+            flex: 1;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: bold;
+            min-width: 200px;
+        }
+
+        .subscription-link {
+            background: var(--light);
+            padding: 12px 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 14px;
+            word-break: break-all;
+            border: 1px solid var(--border);
+        }
+
+        .subscription-link i {
+            color: var(--secondary);
+        }
+
+        .copy-btn {
+            background: var(--secondary) !important;
+            color: white !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            margin-left: 10px !important;
+            cursor: pointer !important;
+            transition: background 0.2s !important;
+        }
+
+        .copy-btn:hover {
+            background: #2980b9 !important;
+        }
+
+        .urls-list {
+            margin: 15px 0;
+        }
+
+        .url-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+            padding: 8px;
+            background: var(--light);
+            border-radius: 6px;
+            border: 1px solid var(--border);
+        }
+
+        .url-input {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+        }
+
+        .check-btn {
+            background: var(--secondary) !important;
+            color: white !important;
+            padding: 6px 12px !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            cursor: pointer !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+        }
+        .check-btn:hover {
+            background: #2980b9 !important;
+        }
+
+        .check-status.success { color: #27ae60; }
+        .check-status.error { color: #e74c3c; }
+
+        .delete-btn {
+            background: var(--danger) !important;
+            color: white !important;
+            width: 32px !important;
+            height: 32px !important;
+            border-radius: 50% !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            cursor: pointer !important;
+            transition: background 0.2s !important;
+        }
+
+        .delete-btn:hover {
+            background: #c0392b !important;
+        }
+
+        .group-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .add-url-btn {
+            background: var(--success) !important;
+            color: white !important;
+            padding: 8px 15px !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            cursor: pointer !important;
+        }
+
+        .add-url-btn:hover {
+            background: #27ae60 !important;
+        }
+
+        .delete-group-btn {
+            background: var(--danger) !important;
+            color: white !important;
+            padding: 8px 15px !important;
+            border-radius: 6px !important;
+            font-size: 14px !important;
+            display: flex !important;
+            align-items: center !important;
+            gap: 5px !important;
+            cursor: pointer !important;
+        }
+
+        .delete-group-btn:hover {
+            background: #c0392b !important;
+        }
+
+        .base-url-section {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+            box-shadow: var(--shadow);
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+
+        .base-url-input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .base-url-input:focus {
+            outline: none;
+            border-color: var(--secondary);
+        }
+
+        .password-section {
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            .btn {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            .group-card {
+                padding: 15px;
+            }
+            .server-info {
+                position: static;
+                margin-top: 10px;
+                font-size: 12px;
+                min-width: auto;
+                width: 100%;
+                justify-content: center;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <i class="fas fa-wrench"></i>
+        <h1>Админка: Управление группами</h1>
+        <div class="server-info">
+            <i class="far fa-clock"></i>
+            <span id="moscow-time">Загрузка...</span>
+            <span>•</span>
+            <i class="fas fa-globe-americas"></i>
+            <span id="public-ip">Загрузка IP...</span>
+            <button class="copy-ip-btn" onclick="copyIP()">Копировать</button>
+        </div>
+    </div>
+
+    <div class="base-url-section">
+        <div class="form-group">
+            <label class="form-label">Базовый URL подписок:</label>
+            <input type="text" id="base-url-input" class="base-url-input" placeholder="https://ваш-домен.ру" value="{{ config.get('base_url', 'http://localhost:8080') }}">
+        </div>
+
+        <button class="btn btn-primary" onclick="updateBaseUrl()">
+            <i class="fas fa-check"></i> Применить
+        </button>
+
+        <div class="password-section">
+            <div class="form-group">
+                <label class="form-label">Новый пароль админки:</label>
+                <input type="password" id="new-password" class="base-url-input" placeholder="Новый пароль (мин. 4 символа)">
+            </div>
+            <button class="btn btn-danger" onclick="changePassword()">
+                <i class="fas fa-lock"></i> Сменить пароль
+            </button>
+        </div>
+    </div>
+
+    <div class="actions">
+        <button class="btn btn-success" onclick="addGroup()">
+            <i class="fas fa-plus"></i> Добавить группу
+        </button>
+        <button class="btn btn-primary" onclick="saveConfig()">
+            <i class="fas fa-save"></i> Сохранить всё
+        </button>
+    </div>
+
+    <div class="groups-container" id="groups-container">
+        {% for gid, data in groups.items() %}
+        <div class="group-card" data-id="{{ gid }}">
+            <div class="group-header">
+                <input type="text" class="group-id" value="{{ gid }}" placeholder="URL подписки (например: my-vpn)">
+            </div>
+
+            <div class="subscription-link">
+                <i class="fas fa-link"></i>
+                <span>Подписка: <span id="link-{{ gid }}">[[BASE_URL]]/{{ gid }}</span></span>
+                <button class="copy-btn" onclick="copyLink('link-{{ gid }}')">
+                    <i class="far fa-copy"></i> Копировать
+                </button>
+            </div>
+
+            <div class="urls-list">
+                {% for url in data.urls %}
+                <div class="url-item">
+                    <input type="url" class="url-input" value="{{ url }}" placeholder="https://...">
+                    <button class="check-btn" onclick="checkServer(this)">
+                        <i class="fas fa-search"></i> Проверить
+                    </button>
+                    <div class="check-status" style="margin-left: 10px; font-size: 12px;"></div>
+                    <div class="delete-btn" onclick="this.parentElement.remove()">
+                        <i class="fas fa-trash-alt"></i>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+
+            <div class="group-actions">
+                <button class="add-url-btn" onclick="addUrlToGroup(this)">
+                    <i class="fas fa-plus"></i> Добавить подписку
+                </button>
+                <button class="delete-group-btn" onclick="deleteGroup(this)">
+                    <i class="fas fa-trash-alt"></i> Удалить группу
+                </button>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <script>
+        let currentBaseUrl = "{{ config.get('base_url', 'http://localhost:8080') }}";
+
+        // === Точное московское время (UTC+3) ===
+        function updateMoscowTime() {
+            const now = new Date();
+            const mskTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
+            const timeStr = mskTime.toLocaleTimeString('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateStr = mskTime.toLocaleDateString('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+
+            document.getElementById('moscow-time').textContent = `${dateStr} ${timeStr}`;
+
+            // Обновляем каждую минуту
+            const nextMinute = new Date(now);
+            nextMinute.setSeconds(0, 0);
+            nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+            const delayMs = nextMinute.getTime() - now.getTime();
+            setTimeout(updateMoscowTime, delayMs);
+        }
+
+        // === Получение публичного IP ===
+        function fetchPublicIP() {
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.json())
+                .then(data => {
+                    document.getElementById('public-ip').textContent = data.ip;
+                })
+                .catch(() => {
+                    document.getElementById('public-ip').textContent = 'Не удалось получить';
+                });
+        }
+
+        // === Копирование IP ===
+        function copyIP() {
+            const ipElement = document.getElementById('public-ip');
+            const ip = ipElement.textContent;
+            navigator.clipboard.writeText(ip).then(() => {
+                alert(`✅ IP скопирован: ${ip}`);
+            }).catch(err => {
+                alert('❌ Не удалось скопировать');
+                console.error(err);
+            });
+        }
+
+        function updateBaseUrl() {
+            const newUrl = document.getElementById('base-url-input').value.trim();
+            if (!newUrl) {
+                alert('❌ URL не может быть пустым');
+                return;
+            }
+            currentBaseUrl = newUrl;
+            updateAllLinks();
+            alert('✅ Базовый URL обновлён');
+        }
+
+        function updateAllLinks() {
+            document.querySelectorAll('.subscription-link span[id^="link-"]').forEach(span => {
+                const card = span.closest('.group-card');
+                const idInput = card.querySelector('.group-id');
+                const gid = idInput ? idInput.value.trim() : 'unknown';
+                span.textContent = currentBaseUrl + '/' + gid;
+            });
+        }
+
+        function copyLink(elementId) {
+            const linkElement = document.getElementById(elementId);
+            const text = linkElement.textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                alert('✅ Ссылка скопирована: ' + text);
+            }).catch(err => {
+                alert('❌ Не удалось скопировать');
+                console.error(err);
+            });
+        }
+
+        function addGroup() {
+            const container = document.getElementById('groups-container');
+            const id = 'group' + (container.children.length + 1);
+            const div = document.createElement('div');
+            div.className = 'group-card';
+            div.dataset.id = id;
+            div.innerHTML = `
+                <div class="group-header">
+                    <input type="text" class="group-id" value="${id}" placeholder="URL подписки (например: my-vpn)">
+                </div>
+                <div class="subscription-link">
+                    <i class="fas fa-link"></i>
+                    <span>Подписка: <span id="link-${id}">${currentBaseUrl}/${id}</span></span>
+                    <button class="copy-btn" onclick="copyLink('link-${id}')">
+                        <i class="far fa-copy"></i> Копировать
+                    </button>
+                </div>
+                <div class="urls-list"></div>
+                <div class="group-actions">
+                    <button class="add-url-btn" onclick="addUrlToGroup(this)">
+                        <i class="fas fa-plus"></i> Добавить подписку
+                    </button>
+                    <button class="delete-group-btn" onclick="deleteGroup(this)">
+                        <i class="fas fa-trash-alt"></i> Удалить группу
+                    </button>
+                </div>
+            `;
+            container.appendChild(div);
+        }
+
+        function addUrlToGroup(btn) {
+            const urlsList = btn.parentElement.previousElementSibling;
+            const div = document.createElement('div');
+            div.className = 'url-item';
+            div.innerHTML = `
+                <input type="url" class="url-input" placeholder="https://...">
+                <button class="check-btn" onclick="checkServer(this)">
+                    <i class="fas fa-search"></i> Проверить
+                </button>
+                <div class="check-status" style="margin-left: 10px; font-size: 12px;"></div>
+                <div class="delete-btn" onclick="this.parentElement.remove()">
+                    <i class="fas fa-trash-alt"></i>
+                </div>
+            `;
+            urlsList.appendChild(div);
+        }
+
+        function deleteGroup(btn) {
+            if (!confirm('Удалить группу?')) return;
+            btn.closest('.group-card').remove();
+        }
+
+        function checkServer(btn) {
+            const input = btn.previousElementSibling;
+            const url = input.value.trim();
+            const statusDiv = btn.nextElementSibling;
+            if (!url) {
+                statusDiv.textContent = "URL пуст";
+                statusDiv.className = "check-status error";
+                return;
+            }
+            statusDiv.textContent = "Проверка...";
+            statusDiv.className = "check-status";
+            fetch('/api/check-server', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ url: url })
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'success') {
+                    statusDiv.textContent = "✅ " + data.message;
+                    statusDiv.className = "check-status success";
+                } else {
+                    statusDiv.textContent = "❌ " + data.message;
+                    statusDiv.className = "check-status error";
+                }
+            })
+            .catch(err => {
+                statusDiv.textContent = "❌ Ошибка запроса";
+                statusDiv.className = "check-status error";
+                console.error(err);
+            });
+        }
+
+        function saveConfig() {
+            const groups = {};
+            document.querySelectorAll('.group-card').forEach(card => {
+                const idInput = card.querySelector('.group-id');
+                const id = idInput.value.trim();
+                if (!id) return;
+                const urls = [];
+                card.querySelectorAll('.url-input').forEach(inp => {
+                    if (inp.value.trim()) urls.push(inp.value.trim());
+                });
+                groups[id] = { urls };
+            });
+
+            fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: "save_config",
+                    groups: groups,
+                    base_url: currentBaseUrl
+                })
+            }).then(r => {
+                if (r.ok) {
+                    alert('✅ Сохранено!');
+                    location.reload();
+                } else {
+                    alert('❌ Ошибка сохранения');
+                }
+            });
+        }
+
+        function changePassword() {
+            const newPass = document.getElementById('new-password').value.trim();
+            if (!newPass || newPass.length < 4) {
+                alert('❌ Пароль должен содержать минимум 4 символа');
+                return;
+            }
+            if (!confirm('⚠️ После смены пароля потребуется повторный вход. Продолжить?')) {
+                return;
+            }
+            fetch('/api/save', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ 
+                    action: "change_password",
+                    new_password: newPass
+                })
+            }).then(r => r.json()).then(data => {
+                if (data.status === "ok") {
+                    alert('✅ Пароль изменён! Выполняю выход...');
+                    location.reload();
+                } else {
+                    alert('❌ ' + (data.error || 'Ошибка'));
+                }
+            }).catch(err => {
+                alert('❌ Ошибка запроса');
+                console.error(err);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            updateAllLinks();
+            updateMoscowTime();
+            fetchPublicIP();
+        });
+    </script>
+</body>
+</html>
