@@ -10,16 +10,16 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# Спрашиваем путь к админ-панели
-read -p "🔐 Введите путь к админ-панели (например: /secret/admin): " ADMIN_PATH
+# Спрашиваем путь к админке
+read -p "🔐 Введите путь к админке (например: /secret/admin): " ADMIN_PATH
 if [[ -z "$ADMIN_PATH" ]]; then
   echo "❌ Путь не может быть пустым"
   exit 1
 fi
 
-# Спрашиваем домен (по умолчанию test.net)
-read -p "🌐 Введите ваш домен (по умолчанию: test.net): " DOMAIN
-DOMAIN=${DOMAIN:-test.net}
+# Спрашиваем домен (по умолчанию test.com.net)
+read -p "🌐 Введите ваш домен (по умолчанию: test.com.net): " DOMAIN
+DOMAIN=${DOMAIN:-test.com.net}
 
 # Спрашиваем, нужен ли SSL
 read -p "🔐 Установить SSL-сертификат Let's Encrypt? (y/n, по умолчанию: y): " SSL_CHOICE
@@ -40,7 +40,7 @@ if ! command -v docker &> /dev/null; then
     systemctl enable --now docker
 fi
 
-# Установка Nginx (обязательно для прокси)
+# Установка Nginx
 echo "🔧 Устанавливаю Nginx..."
 apt install -y nginx
 
@@ -54,31 +54,43 @@ fi
 DEPLOY_DIR="/opt/vless-combiner"
 mkdir -p "$DEPLOY_DIR"
 
-# Скачивание файлов
-echo "📥 Скачиваю файлы..."
-curl -s -o "$DEPLOY_DIR/app.py" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/app.py
-curl -s -o "$DEPLOY_DIR/config.yaml" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/config.yaml
-mkdir -p "$DEPLOY_DIR/templates"
-curl -s -o "$DEPLOY_DIR/templates/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
-
-# Обновляем app.py — заменяем маршрут админ-панели
-sed -i "s|@app.route('/djufbsjrlhddyg/admin')|@app.route('/$ADMIN_ROUTE')|" "$DEPLOY_DIR/app.py"
-
-# Обновляем admin.html
-sed -i "s|/djufbsjrlhddyg/admin|/$ADMIN_ROUTE|g" "$DEPLOY_DIR/templates/admin.html"
-
-# Обновляем config.yaml — ставим базовый URL
-if $USE_SSL; then
-  BASE_URL="https://$DOMAIN"
-else
-  BASE_URL="http://$DOMAIN:8080"
+# Скачиваем файлы ТОЛЬКО ЕСЛИ ИХ НЕТ
+if [ ! -f "$DEPLOY_DIR/app.py" ]; then
+    echo "📥 Скачиваю файлы..."
+    curl -s -o "$DEPLOY_DIR/app.py" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/app.py
+    mkdir -p "$DEPLOY_DIR/templates"
+    curl -s -o "$DEPLOY_DIR/templates/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
 fi
-sed -i "s|base_url: \"http://localhost:8080\"|base_url: \"$BASE_URL\"|" "$DEPLOY_DIR/config.yaml"
+
+# Создаём config.yaml, если его нет
+CONFIG_FILE="$DEPLOY_DIR/config.yaml"
+if [ ! -f "$CONFIG_FILE" ]; then
+    echo "📝 Создаю config.yaml..."
+    if $USE_SSL; then
+        BASE_URL="https://$DOMAIN"
+    else
+        BASE_URL="http://$DOMAIN:8080"
+    fi
+    cat > "$CONFIG_FILE" << YAML
+base_url: "$BASE_URL"
+admin_password: "admin123"
+admin_route: "$ADMIN_ROUTE"
+port: 8080
+groups:
+  group1:
+    name: "Основные"
+    urls:
+      - "https://r.fast.net.ru:6060/sub/test"
+      - "https://d.fast.net.ru:6060/sub/test"
+YAML
+else
+    echo "⚠️ config.yaml уже существует — не перезаписываю"
+fi
 
 # Права
 chown -R $(logname):$(logname) "$DEPLOY_DIR"
 
-# Запуск Flask-контейнера
+# Запуск контейнера
 echo "🐳 Запускаю контейнер..."
 docker stop vless-combiner 2>/dev/null || true
 docker rm vless-combiner 2>/dev/null || true
@@ -121,7 +133,7 @@ NGINX_EOF
 ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
 nginx -t && systemctl reload nginx
 
-# Получение SSL-сертификата (если нужно)
+# SSL
 if $USE_SSL; then
     echo "🔐 Получаю SSL-сертификат от Let's Encrypt..."
     certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email admin@$DOMAIN
@@ -133,13 +145,16 @@ fi
 echo ""
 echo "✅ Установка завершена!"
 if $USE_SSL; then
-  echo "   Админ-панель: https://$DOMAIN/$ADMIN_ROUTE"
+  echo "   Админка: https://$DOMAIN/$ADMIN_ROUTE"
+  echo "   Подписка: https://$DOMAIN/group1"
 else
   echo "   Админка: http://$DOMAIN:8080/$ADMIN_ROUTE"
+  echo "   Подписка: http://$DOMAIN:8080/group1"
 fi
 echo ""
-echo "🔑 Пароль по умолчанию для админ-панели: admin123"
+echo "🔑 Пароль по умолчанию для админки: admin123"
 echo "❗ Рекомендуется сменить его в интерфейсе после первого входа."
 echo ""
-echo "💡 Чтобы изменить настройки — отредактируй файлы в /opt/vless-combiner/"
-echo "   и перезапусти контейнер: docker restart vless-combiner"
+echo "💡 Файлы проекта: /opt/vless-combiner/"
+echo "   Чтобы обновить — замени app.py и admin.html, затем:"
+echo "   sudo docker restart vless-combiner"

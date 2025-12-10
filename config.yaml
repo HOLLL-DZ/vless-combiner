@@ -1,12 +1,12 @@
 # config.yaml
 base_url: "https://test.com.net"
 admin_password: "admin123"
-admin_route: "djufbsjrlhddyg/admin"  # ← путь к админке (без слэшей)
+admin_route: "admin_panel"
 port: 8080
 
 groups:
   group1:
     name: "Основные"
     urls:
-      - "https://46465"
-      - "https://46465"
+      - "https://test-1.com"
+      - "https://test-2.com"
