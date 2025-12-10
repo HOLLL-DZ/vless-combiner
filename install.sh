@@ -134,10 +134,8 @@ echo ""
 echo "✅ Установка завершена!"
 if $USE_SSL; then
   echo "   Админ-панель: https://$DOMAIN/$ADMIN_ROUTE"
-  echo "   Подписка: https://$DOMAIN/group1"
 else
   echo "   Админка: http://$DOMAIN:8080/$ADMIN_ROUTE"
-  echo "   Подписка: http://$DOMAIN:8080/group1"
 fi
 echo ""
 echo "🔑 Пароль по умолчанию для админ-панели: admin123"
