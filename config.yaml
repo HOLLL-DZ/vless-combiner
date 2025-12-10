@@ -1,10 +1,10 @@
-base_url: "https://0ллллл.net.ru"
+base_url: "https://test.com"
 admin_password: "admin123"
-admin_route: "555"
+admin_route: "admin_panel"
 port: 8080
 groups:
   group1:
     name: "Основные"
     urls:
-      - "https://аоа"
-      - "https://алоаt"
+      - "https://test1.com"
+      - "https://test2.com"
