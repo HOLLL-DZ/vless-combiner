@@ -78,20 +78,15 @@ def fetch_and_combine(urls):
 # === Инициализация Flask ===
 app = Flask(__name__)
 
-# === Маршруты ===
-@app.route('/<group_id>')
-def serve_group(group_id):
+# Загружаем маршрут админки при старте
+config_at_start = load_config()
+ADMIN_ROUTE = config_at_start.get('admin_route', 'admin').lstrip('/')
+
+@app.route(f'/{ADMIN_ROUTE}')
+@requires_auth
+def admin_view():
     config = load_config()
-    groups = config.get('groups', {})
-    if group_id not in groups:
-        return "Group not found", 404
-    urls = groups[group_id].get('urls', [])
-    proxies = fetch_and_combine(urls)
-    if not proxies:
-        return "No valid proxies", 500
-    combined = '\n'.join(proxies)
-    encoded = base64.b64encode(combined.encode('utf-8')).decode('utf-8')
-    return Response(encoded, mimetype='text/plain')
+    return render_template('admin.html', groups=config.get('groups', {}), config=config)
 
 @app.route('/')
 def index():
@@ -99,13 +94,11 @@ def index():
     return render_template('index.html', groups=config.get('groups', {}))
 
 # === Динамический маршрут админки ===
-@app.route(f'/<path:route>')
-def dynamic_admin(route=None):
+@app.route('/test-admin')
+@requires_auth
+def test_admin():
     config = load_config()
-    admin_route = config.get('admin_route', 'admin')
-    if route == admin_route:
-        return admin_view()
-    return "Page not found", 404
+    return render_template('admin.html', groups=config.get('groups', {}), config=config)
 
 def admin_view():
     config = load_config()
