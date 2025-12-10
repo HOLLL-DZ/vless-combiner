@@ -186,6 +186,32 @@ def api_config():
         }
     }
     return jsonify(safe_config)
+    
+@app.route('/<group_id>')
+def serve_group(group_id):
+    config = load_config()
+    groups = config.get('groups', {})
+    
+    if group_id not in groups:
+        return "Group not found", 404
+    
+    group_data = groups[group_id]
+    urls = group_data.get('urls', [])
+    
+    if not urls:
+        return "No URLs in this group", 404
+    
+    # Собираем все прокси
+    all_lines = fetch_and_combine(urls)
+    
+    if not all_lines:
+        return "No valid proxies found", 404
+    
+    # Кодируем в Base64
+    combined_text = "\n".join(all_lines)
+    encoded = base64.b64encode(combined_text.encode('utf-8')).decode('utf-8')
+    
+    return Response(encoded, mimetype='text/plain')
 
 # === Запуск ===
 if __name__ == '__main__':
