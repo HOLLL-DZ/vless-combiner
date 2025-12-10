@@ -35,6 +35,10 @@ if ! command -v docker &> /dev/null; then
     systemctl enable --now docker
 fi
 
+# Установка Nginx и Certbot
+echo "🔧 Устанавливаю Nginx и Certbot..."
+apt install -y nginx certbot python3-certbot-nginx
+
 # Создание директории
 DEPLOY_DIR="/opt/vless-combiner"
 mkdir -p "$DEPLOY_DIR"
@@ -58,7 +62,7 @@ sed -i "s|base_url: \"http://localhost:8080\"|base_url: \"https://$DOMAIN\"|" "$
 # Права
 chown -R $(logname):$(logname) "$DEPLOY_DIR"
 
-# Запуск
+# Запуск Flask-контейнера
 echo "🐳 Запускаю контейнер..."
 docker stop vless-combiner 2>/dev/null || true
 docker rm vless-combiner 2>/dev/null || true
@@ -75,9 +79,35 @@ docker run -d \
     python /app/app.py
   "
 
+# Конфиг Nginx
+echo "📝 Настраиваю Nginx..."
+NGINX_CONF="/etc/nginx/sites-available/$DOMAIN"
+cat > "$NGINX_CONF" << NGINX_EOF
+server {
+    listen 80;
+    server_name $DOMAIN;
+
+    location / {
+        proxy_pass http://127.0.0.1:8080;
+        proxy_set_header Host \$host;
+        proxy_set_header X-Real-IP \$remote_addr;
+        proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto \$scheme;
+    }
+}
+NGINX_EOF
+
+ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
+nginx -t && systemctl reload nginx
+
+# Получение SSL-сертификата
+echo "🔐 Получаю SSL-сертификат от Let's Encrypt..."
+certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email admin@$DOMAIN
+
 echo ""
 echo "✅ Установка завершена!"
 echo "   Админка: https://$DOMAIN/$ADMIN_ROUTE"
 echo "   Подписка: https://$DOMAIN/group1"
 echo ""
-echo "💡 Чтобы изменить домен или путь — просто запусти скрипт заново."
+echo "💡 Чтобы изменить настройки — отредактируй файлы в /opt/vless-combiner/"
+echo "   и перезапусти контейнер: docker restart vless-combiner"
