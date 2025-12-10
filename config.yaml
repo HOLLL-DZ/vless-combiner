@@ -1,7 +1,0 @@
-admin_password: admin123
-base_url: https://test.romfakerule.net.ru
-groups:
-  admin_jbuvgfcy:
-    urls:
-    - https://r.fast.net.ru:6060/sub/admin
-    - https://d.fast.net.ru:6060/sub/admin
