@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <title>VLESS Объединитель</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 30px; background: #f5f5f5; }
+        h1 { color: #2c3e50; }
+        .group { margin: 15px 0; padding: 15px; background: white; border-radius: 8px; }
+        a { color: #3498db; text-decoration: none; font-weight: bold; }
+        a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <h1>🔗 VLESS Объединитель подписок</h1>
+    {% for gid, data in groups.items() %}
+    <div class="group">
+        <h3>{{ data.name }}</h3>
+        <p><a href="/{{ gid }}" target="_blank">Получить подписку (Base64)</a></p>
+        <small>URL: <code>https://ваш-домен/{{ gid }}</code></small>
+    </div>
+    {% endfor %}
+</body>
+</html>
