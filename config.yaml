@@ -1,0 +1,7 @@
+admin_password: admin123
+base_url: https://exs.net
+groups:
+  admin_gcy:
+    urls:
+    - https://1.ertu.com/max
+    - https://2.ertu.com/min
