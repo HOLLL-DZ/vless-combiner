@@ -80,8 +80,8 @@ groups:
   group1:
     name: "Основные"
     urls:
-      - "https://r.fast.net.ru:6060/sub/test"
-      - "https://d.fast.net.ru:6060/sub/test"
+      - "https://test1.com"
+      - "https://test2.com"
 YAML
 else
     echo "⚠️ config.yaml уже существует — не перезаписываю"
@@ -146,10 +146,8 @@ echo ""
 echo "✅ Установка завершена!"
 if $USE_SSL; then
   echo "   Админка: https://$DOMAIN/$ADMIN_ROUTE"
-  echo "   Подписка: https://$DOMAIN/group1"
 else
   echo "   Админка: http://$DOMAIN:8080/$ADMIN_ROUTE"
-  echo "   Подписка: http://$DOMAIN:8080/group1"
 fi
 echo ""
 echo "🔑 Пароль по умолчанию для админки: admin123"
