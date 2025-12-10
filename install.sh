@@ -10,16 +10,16 @@ if [ "$EUID" -ne 0 ]; then
   exit 1
 fi
 
-# Спрашиваем путь к админке
-read -p "🔐 Введите путь к админке (например: /secret/admin): " ADMIN_PATH
+# Спрашиваем путь к админ-панели
+read -p "🔐 Введите путь к админ-панели (например: /secret/admin): " ADMIN_PATH
 if [[ -z "$ADMIN_PATH" ]]; then
   echo "❌ Путь не может быть пустым"
   exit 1
 fi
 
-# Спрашиваем домен (по умолчанию test.com.net)
-read -p "🌐 Введите ваш домен (по умолчанию: test.com.net): " DOMAIN
-DOMAIN=${DOMAIN:-test.com.net}
+# Спрашиваем домен (по умолчанию test.net)
+read -p "🌐 Введите ваш домен (по умолчанию: test.net): " DOMAIN
+DOMAIN=${DOMAIN:-test.net}
 
 # Спрашиваем, нужен ли SSL
 read -p "🔐 Установить SSL-сертификат Let's Encrypt? (y/n, по умолчанию: y): " SSL_CHOICE
@@ -61,7 +61,7 @@ curl -s -o "$DEPLOY_DIR/config.yaml" https://raw.githubusercontent.com/HOLLL-DZ/
 mkdir -p "$DEPLOY_DIR/templates"
 curl -s -o "$DEPLOY_DIR/templates/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
 
-# Обновляем app.py — заменяем маршрут админки
+# Обновляем app.py — заменяем маршрут админ-панели
 sed -i "s|@app.route('/djufbsjrlhddyg/admin')|@app.route('/$ADMIN_ROUTE')|" "$DEPLOY_DIR/app.py"
 
 # Обновляем admin.html
@@ -133,14 +133,14 @@ fi
 echo ""
 echo "✅ Установка завершена!"
 if $USE_SSL; then
-  echo "   Админка: https://$DOMAIN/$ADMIN_ROUTE"
+  echo "   Админ-панель: https://$DOMAIN/$ADMIN_ROUTE"
   echo "   Подписка: https://$DOMAIN/group1"
 else
   echo "   Админка: http://$DOMAIN:8080/$ADMIN_ROUTE"
   echo "   Подписка: http://$DOMAIN:8080/group1"
 fi
 echo ""
-echo "🔑 Пароль по умолчанию для админки: admin123"
+echo "🔑 Пароль по умолчанию для админ-панели: admin123"
 echo "❗ Рекомендуется сменить его в интерфейсе после первого входа."
 echo ""
 echo "💡 Чтобы изменить настройки — отредактируй файлы в /opt/vless-combiner/"

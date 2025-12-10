@@ -1,7 +1,7 @@
 admin_password: admin123
-base_url: https://exs.net
+base_url: https://my-site.net
 groups:
-  admin_gcy:
+  group1:
     urls:
-    - https://1.ertu.com/max
-    - https://2.ertu.com/min
+    - https://my-vless-1.net
+    - https://my-vless-2.net
