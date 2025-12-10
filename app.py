@@ -5,9 +5,14 @@ import base64
 import requests
 from flask import Flask, render_template, request, Response, jsonify
 from functools import wraps
+from urllib.parse import urlparse
+import socket
+import json
+import time
+import threading
+from datetime import datetime
 
-app = Flask(__name__)
-
+# === Загрузка конфигурации ===
 CONFIG_PATH = os.path.join(os.path.dirname(__file__), 'config.yaml')
 
 def load_config():
@@ -15,24 +20,30 @@ def load_config():
         return {
             "base_url": "http://localhost:8080",
             "admin_password": "admin123",
-            "groups": {
-                "group1": {
-                    "urls": []
-                }
-            }
+            "admin_route": "admin",
+            "port": 8080,
+            "groups": {}
         }
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
-        if 'base_url' not in config:
-            config['base_url'] = "http://localhost:8080"
-        if 'admin_password' not in config:
-            config['admin_password'] = "admin123"
+        # Устанавливаем значения по умолчанию, если отсутствуют
+        defaults = {
+            "base_url": "http://localhost:8080",
+            "admin_password": "admin123",
+            "admin_route": "admin",
+            "port": 8080,
+            "groups": {}
+        }
+        for key, value in defaults.items():
+            if key not in config:
+                config[key] = value
         return config
 
 def save_config(config):
     with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
         yaml.dump(config, f, allow_unicode=True, default_flow_style=False, indent=2)
 
+# === Аутентификация ===
 def check_auth(username, password):
     config = load_config()
     return password == config.get('admin_password', 'admin123')
@@ -50,6 +61,7 @@ def requires_auth(f):
         return f(*args, **kwargs)
     return decorated
 
+# === Вспомогательные функции ===
 def fetch_and_combine(urls):
     all_lines = []
     for url in urls:
@@ -63,6 +75,10 @@ def fetch_and_combine(urls):
             print(f"Error fetching {url}: {e}")
     return all_lines
 
+# === Инициализация Flask ===
+app = Flask(__name__)
+
+# === Маршруты ===
 @app.route('/<group_id>')
 def serve_group(group_id):
     config = load_config()
@@ -82,12 +98,20 @@ def index():
     config = load_config()
     return render_template('index.html', groups=config.get('groups', {}))
 
-@app.route('/djufbsjrlhddyg/admin')
-@requires_auth
-def admin():
+# === Динамический маршрут админки ===
+@app.route(f'/<path:route>')
+def dynamic_admin(route=None):
+    config = load_config()
+    admin_route = config.get('admin_route', 'admin')
+    if route == admin_route:
+        return admin_view()
+    return "Page not found", 404
+
+def admin_view():
     config = load_config()
     return render_template('admin.html', groups=config.get('groups', {}), config=config)
 
+# === API ===
 @app.route('/api/save', methods=['POST'])
 @requires_auth
 def api_save():
@@ -104,24 +128,19 @@ def api_save():
         return jsonify({"status": "ok", "message": "Password changed. Re-login required."})
     
     elif action == 'save_config':
-        # groups — это объект, где ключ = ID (URL)
+        groups = {}
         groups_input = data.get('groups', {})
-        if not isinstance(groups_input, dict):
+        if isinstance(groups_input, dict):
+            for gid, g_data in groups_input.items():
+                groups[gid] = {
+                    'name': g_data.get('name', gid),
+                    'urls': [u.strip() for u in g_data.get('urls', []) if u.strip()]
+                }
+        else:
             return jsonify({"error": "Invalid groups format"}), 400
-        
-        new_groups = {}
-        for new_id, g_data in groups_input.items():
-            # Новый ID должен быть непустым и валидным
-            clean_id = new_id.strip()
-            if not clean_id:
-                continue
-            new_groups[clean_id] = {
-                'urls': [u.strip() for u in g_data.get('urls', []) if u.strip()]
-            }
-        
         base_url = data.get('base_url', "http://localhost:8080")
         config = load_config()
-        config.update({'base_url': base_url, 'groups': new_groups})
+        config.update({'base_url': base_url, 'groups': groups})
         save_config(config)
         return jsonify({"status": "ok"})
 
@@ -129,8 +148,6 @@ def api_save():
 
 @app.route('/api/check-server', methods=['POST'])
 def api_check_server():
-    from urllib.parse import urlparse
-    import socket
     data = request.json
     url = data.get('url', '').strip()
     if not url:
@@ -152,5 +169,32 @@ def api_check_server():
     except Exception as e:
         return jsonify({"status": "error", "message": str(e)})
 
+@app.route('/api/groups')
+def api_groups():
+    config = load_config()
+    groups = {}
+    for gid, data in config.get('groups', {}).items():
+        groups[gid] = {
+            'name': data.get('name', gid),
+            'url_count': len(data.get('urls', []))
+        }
+    return jsonify(groups)
+
+@app.route('/api/config')
+def api_config():
+    config = load_config()
+    safe_config = {
+        'groups': {
+            gid: {
+                'name': data.get('name'),
+                'url_count': len(data.get('urls', []))
+            }
+            for gid, data in config.get('groups', {}).items()
+        }
+    }
+    return jsonify(safe_config)
+
+# === Запуск ===
 if __name__ == '__main__':
-    app.run(host='0.0.0.0', port=8080)
+    config = load_config()
+    app.run(host='0.0.0.0', port=config.get('port', 8080))

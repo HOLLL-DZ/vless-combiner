@@ -1,7 +1,12 @@
-admin_password: admin123
-base_url: https://my-site.net
+# config.yaml
+base_url: "https://test.com.net"
+admin_password: "admin123"
+admin_route: "djufbsjrlhddyg/admin"  # ← путь к админке (без слэшей)
+port: 8080
+
 groups:
   group1:
+    name: "Основные"
     urls:
-    - https://my-vless-1.net
-    - https://my-vless-2.net
+      - "https://46465"
+      - "https://46465"
