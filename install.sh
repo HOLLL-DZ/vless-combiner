@@ -90,10 +90,10 @@ echo "📥 Скачиваю все файлы проекта с GitHub..."
 curl -s -o "$DEPLOY_DIR/app.py" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/app.py
 
 # admin.html
-curl -s -o "$DEPLOY_DIR/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
+curl -s -o "$DEPLOY_DIR/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/admin.html
 
 # index.html
-curl -s -o "$DEPLOY_DIR/index.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/index.html
+curl -s -o "$DEPLOY_DIR/index.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/index.html
 
 # config.yaml - шаблон с GitHub
 curl -s -o "$DEPLOY_DIR/config.yaml" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/config.yaml
