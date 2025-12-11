@@ -83,20 +83,18 @@ fi
 DEPLOY_DIR="/opt/vless-combiner"
 mkdir -p "$DEPLOY_DIR"
 
-# Скачиваем ВСЕ файлы с GitHub
+# Скачиваем ВСЕ файлы с GitHub из ПРАВИЛЬНЫХ путей
 echo "📥 Скачиваю все файлы проекта с GitHub..."
 
 # app.py
 curl -s -o "$DEPLOY_DIR/app.py" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/app.py
 
-# admin.html
-curl -s -o "$DEPLOY_DIR/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/admin.html
-
-# index.html
-curl -s -o "$DEPLOY_DIR/index.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/index.html
-
-# config.yaml - шаблон с GitHub
+# config.yaml
 curl -s -o "$DEPLOY_DIR/config.yaml" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/config.yaml
+
+# templates/ → но шаблоны будем класть в корень (без папки templates/)
+curl -s -o "$DEPLOY_DIR/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
+curl -s -o "$DEPLOY_DIR/index.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/index.html
 
 # Исправляем app.py: добавляем template_folder='.'
 if ! grep -q "template_folder" "$DEPLOY_DIR/app.py"; then
@@ -125,6 +123,7 @@ fi
 # Обновляем значения в конфиге
 sed -i "s|base_url:.*|base_url: \"$BASE_URL\"|" "$DEPLOY_DIR/config.yaml"
 sed -i "s|admin_route:.*|admin_route: \"$ADMIN_ROUTE\"|" "$DEPLOY_DIR/config.yaml"
+sed -i "s|port:.*|port: 8080|" "$DEPLOY_DIR/config.yaml"
 
 # Если файла не существует или он пустой, создаем его вручную
 if [ ! -f "$DEPLOY_DIR/config.yaml" ] || [ ! -s "$DEPLOY_DIR/config.yaml" ]; then
