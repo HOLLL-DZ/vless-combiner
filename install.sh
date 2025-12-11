@@ -114,9 +114,9 @@ if grep -q "\[\[BASE_URL\]\]" "$DEPLOY_DIR/admin.html"; then
     sed -i 's|\[\[BASE_URL\]\]|{{ base_url }}|g' "$DEPLOY_DIR/admin.html"
 fi
 
-# Создаём config.yaml, если его нет
+# Создаём config.yaml, если его нет или он пустой
 CONFIG_FILE="$DEPLOY_DIR/config.yaml"
-if [ ! -f "$CONFIG_FILE" ]; then
+if [ ! -f "$CONFIG_FILE" ] || [ ! -s "$CONFIG_FILE" ]; then
     echo "📝 Создаю config.yaml..."
     if $USE_SSL; then
         BASE_URL="https://$DOMAIN"
@@ -136,7 +136,7 @@ groups:
       - "https://test2.com"
 YAML
 else
-    echo "⚠️ config.yaml уже существует — не перезаписываю"
+    echo "⚠️ config.yaml уже существует и не пустой — не перезаписываю"
 fi
 
 # Права
