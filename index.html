@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>Vless-Combiner</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f5f5f5; }
+    .group { background: white; padding: 15px; margin: 15px 0; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    a { color: #007bff; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code { background: #eee; padding: 2px 6px; border-radius: 4px; }
+  </style>
+</head>
+<body>
+  <h1>Vless-Combiner</h1>
+  {% for gid, data in groups.items() %}
+  <div class="group">
+    <h2>{{ data.name }}</h2>
+    <p><a href="/{{ gid }}" target="_blank">Получить подписку (Base64)</a></p>
+    <p>URL: <code>{{ base_url }}/{{ gid }}</code></p>
+  </div>
+  {% endfor %}
+</body>
+</html>
