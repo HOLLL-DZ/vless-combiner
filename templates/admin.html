@@ -388,7 +388,7 @@
     <div class="base-url-section">
         <div class="form-group">
             <label class="form-label">Базовый URL подписок:</label>
-            <input type="text" id="base-url-input" class="base-url-input" placeholder="https://ваш-домен.ру" value="{{ config.get('base_url', 'http://localhost:8080') }}">
+            <input type="text" id="base-url-input" class="base-url-input" placeholder="https://ваш-домен.ру" value="{{ base_url }}">
         </div>
 
         <button class="btn btn-primary" onclick="updateBaseUrl()">
@@ -424,7 +424,7 @@
 
             <div class="subscription-link">
                 <i class="fas fa-link"></i>
-                <span>Подписка: <span id="link-{{ gid }}">[[BASE_URL]]/{{ gid }}</span></span>
+                <span>Подписка: <span id="link-{{ gid }}">{{ base_url }}/{{ gid }}</span></span>
                 <button class="copy-btn" onclick="copyLink('link-{{ gid }}')">
                     <i class="far fa-copy"></i> Копировать
                 </button>
@@ -458,7 +458,7 @@
     </div>
 
     <script>
-        let currentBaseUrl = "{{ config.get('base_url', 'http://localhost:8080') }}";
+        let currentBaseUrl = "{{ base_url }}";
 
         // === Точное московское время (UTC+3) ===
         function updateMoscowTime() {
