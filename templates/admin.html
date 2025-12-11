@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <title>Vless-Combiner: Управление подписками</title>
+    <title>Vless-Combiner: Управление группами</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
     <style>
         :root {
@@ -101,49 +101,38 @@
             margin-bottom: 20px;
         }
 
-        /* === ЖЁСТКИЕ СТИЛИ ДЛЯ ВСЕХ КНОПОК — УБИРАЕМ ОБВОДКУ НАВЕРНЯКА === */
-        button,
-        .btn,
-        .check-btn,
-        .copy-btn,
-        .delete-btn,
-        .add-url-btn,
-        .delete-group-btn {
-            border: none !important;
-            outline: none !important;
-            box-shadow: none !important;
-            background-color: inherit !important;
-            color: inherit !important;
-            font-family: inherit !important;
-            font-size: inherit !important;
-            padding: 8px 16px !important;
-            border-radius: 6px !important;
-            cursor: pointer !important;
-            transition: all 0.2s ease !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 8px !important;
-            font-weight: 600 !important;
-            text-decoration: none !important;
+        .btn {
+            border: none;
+            outline: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            text-decoration: none;
+            font-family: inherit;
         }
 
         .btn-primary {
-            background: var(--secondary) !important;
-            color: white !important;
+            background: var(--secondary);
+            color: white;
         }
 
         .btn-success {
-            background: var(--success) !important;
-            color: white !important;
+            background: var(--success);
+            color: white;
         }
 
         .btn-danger {
-            background: var(--danger) !important;
-            color: white !important;
+            background: var(--danger);
+            color: white;
         }
 
         .btn:hover {
-            transform: translateY(-1px) !important;
+            transform: translateY(-1px);
         }
 
         .groups-container {
@@ -201,18 +190,18 @@
         }
 
         .copy-btn {
-            background: var(--secondary) !important;
-            color: white !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            margin-left: 10px !important;
-            cursor: pointer !important;
-            transition: background 0.2s !important;
+            background: var(--secondary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            margin-left: 10px;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
         .copy-btn:hover {
-            background: #2980b9 !important;
+            background: #2980b9;
         }
 
         .urls-list {
@@ -239,38 +228,39 @@
         }
 
         .check-btn {
-            background: var(--secondary) !important;
-            color: white !important;
-            padding: 6px 12px !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            cursor: pointer !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 5px !important;
+            background: var(--secondary);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
+
         .check-btn:hover {
-            background: #2980b9 !important;
+            background: #2980b9;
         }
 
         .check-status.success { color: #27ae60; }
         .check-status.error { color: #e74c3c; }
 
         .delete-btn {
-            background: var(--danger) !important;
-            color: white !important;
-            width: 32px !important;
-            height: 32px !important;
-            border-radius: 50% !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-            cursor: pointer !important;
-            transition: background 0.2s !important;
+            background: var(--danger);
+            color: white;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
         }
 
         .delete-btn:hover {
-            background: #c0392b !important;
+            background: #c0392b;
         }
 
         .group-actions {
@@ -280,35 +270,35 @@
         }
 
         .add-url-btn {
-            background: var(--success) !important;
-            color: white !important;
-            padding: 8px 15px !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 5px !important;
-            cursor: pointer !important;
+            background: var(--success);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
         }
 
         .add-url-btn:hover {
-            background: #27ae60 !important;
+            background: #27ae60;
         }
 
         .delete-group-btn {
-            background: var(--danger) !important;
-            color: white !important;
-            padding: 8px 15px !important;
-            border-radius: 6px !important;
-            font-size: 14px !important;
-            display: flex !important;
-            align-items: center !important;
-            gap: 5px !important;
-            cursor: pointer !important;
+            background: var(--danger);
+            color: white;
+            padding: 8px 15px;
+            border-radius: 6px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            cursor: pointer;
         }
 
         .delete-group-btn:hover {
-            background: #c0392b !important;
+            background: #c0392b;
         }
 
         .base-url-section {
@@ -460,7 +450,6 @@
     <script>
         let currentBaseUrl = "{{ base_url }}";
 
-        // === Точное московское время (UTC+3) ===
         function updateMoscowTime() {
             const now = new Date();
             const mskTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
@@ -476,10 +465,7 @@
                 month: '2-digit',
                 year: 'numeric'
             });
-
             document.getElementById('moscow-time').textContent = `${dateStr} ${timeStr}`;
-
-            // Обновляем каждую минуту
             const nextMinute = new Date(now);
             nextMinute.setSeconds(0, 0);
             nextMinute.setMinutes(nextMinute.getMinutes() + 1);
@@ -487,7 +473,6 @@
             setTimeout(updateMoscowTime, delayMs);
         }
 
-        // === Получение публичного IP ===
         function fetchPublicIP() {
             fetch('https://api.ipify.org?format=json')
                 .then(r => r.json())
@@ -499,16 +484,9 @@
                 });
         }
 
-        // === Копирование IP ===
         function copyIP() {
-            const ipElement = document.getElementById('public-ip');
-            const ip = ipElement.textContent;
-            navigator.clipboard.writeText(ip).then(() => {
-                alert(`✅ IP скопирован: ${ip}`);
-            }).catch(err => {
-                alert('❌ Не удалось скопировать');
-                console.error(err);
-            });
+            const ip = document.getElementById('public-ip').textContent;
+            navigator.clipboard.writeText(ip).catch(() => alert('❌ Не удалось скопировать IP'));
         }
 
         function updateBaseUrl() {
@@ -533,12 +511,20 @@
 
         function copyLink(elementId) {
             const linkElement = document.getElementById(elementId);
-            const text = linkElement.textContent;
+            if (!linkElement) {
+                alert('❌ Элемент не найден: ' + elementId);
+                return;
+            }
+            const text = linkElement.textContent.trim();
+            if (!text) {
+                alert('❌ Ссылка пустая');
+                return;
+            }
             navigator.clipboard.writeText(text).then(() => {
-                alert('✅ Ссылка скопирована: ' + text);
+                alert('✅ Скопировано: ' + text);
             }).catch(err => {
-                alert('❌ Не удалось скопировать');
-                console.error(err);
+                alert('❌ Разрешите копирование или обновите страницу');
+                console.error('Clipboard error:', err);
             });
         }
 
