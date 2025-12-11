@@ -17,19 +17,33 @@ if [[ -z "$ADMIN_PATH" ]]; then
   exit 1
 fi
 
-# Спрашиваем домен (по умолчанию test.com.net)
-read -p "🌐 Введите ваш домен (по умолчанию: test.com.net): " DOMAIN
-DOMAIN=${DOMAIN:-test.com.net}
+# Спрашиваем адрес (домен или IP)
+read -p "🌐 Введите ваш домен или IP-адрес сервера (по умолчанию: test.com.net): " SERVER_ADDR
+SERVER_ADDR=${SERVER_ADDR:-test.com.net}
 
-# Спрашиваем, нужен ли SSL
-read -p "🔐 Установить SSL-сертификат Let's Encrypt? (y/n, по умолчанию: y): " SSL_CHOICE
-SSL_CHOICE=${SSL_CHOICE:-y}
-USE_SSL=false
-if [[ "$SSL_CHOICE" =~ ^[Yy]$ ]]; then
-  USE_SSL=true
+# Определяем, IP это или домен
+if [[ $SERVER_ADDR =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+    IS_IP=true
+    echo "📍 Распознан IP-адрес: $SERVER_ADDR"
+else
+    IS_IP=false
 fi
 
-# Убираем начальный и конечный слэш
+# Спрашиваем про SSL, но отключаем его, если это IP
+if $IS_IP; then
+    USE_SSL=false
+    echo "🔒 SSL недоступен для IP-адресов — отключаю Let's Encrypt."
+else
+    read -p "🔐 Установить SSL-сертификат Let's Encrypt? (y/n, по умолчанию: y): " SSL_CHOICE
+    SSL_CHOICE=${SSL_CHOICE:-y}
+    if [[ "$SSL_CHOICE" =~ ^[Yy]$ ]]; then
+        USE_SSL=true
+    else
+        USE_SSL=false
+    fi
+fi
+
+DOMAIN="$SERVER_ADDR"
 ADMIN_ROUTE=$(echo "$ADMIN_PATH" | sed 's|^/||; s|/$||')
 
 # Установка Docker, если нет
@@ -59,7 +73,6 @@ if [ ! -f "$DEPLOY_DIR/app.py" ]; then
     echo "📥 Скачиваю файлы..."
     curl -s -o "$DEPLOY_DIR/app.py" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/app.py
     mkdir -p "$DEPLOY_DIR/templates"
-    # Внутри install.sh
     curl -s -o "$DEPLOY_DIR/templates/admin.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/admin.html
     curl -s -o "$DEPLOY_DIR/templates/index.html" https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templates/index.html
 fi
@@ -90,7 +103,7 @@ else
 fi
 
 # Права
-chown -R $(logname):$(logname) "$DEPLOY_DIR"
+chown -R "$(logname):$(logname)" "$DEPLOY_DIR"
 
 # Запуск контейнера
 echo "🐳 Запускаю контейнер..."
@@ -133,24 +146,32 @@ server {
 NGINX_EOF
 
 ln -sf "$NGINX_CONF" /etc/nginx/sites-enabled/
+rm -f /etc/nginx/sites-enabled/default 2>/dev/null || true
 nginx -t && systemctl reload nginx
 
 # SSL
+PROTOCOL="http"
 if $USE_SSL; then
     echo "🔐 Получаю SSL-сертификат от Let's Encrypt..."
-    certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email admin@$DOMAIN
+    certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email admin@"$DOMAIN" || {
+        echo "⚠️ Certbot не смог получить сертификат. Возможно, домен не указывает на этот сервер."
+        PROTOCOL="http"
+    }
     PROTOCOL="https"
-else
-    PROTOCOL="http"
 fi
 
 echo ""
 echo "✅ Установка завершена!"
-if $USE_SSL; then
-  echo "   Админ-панель: https://$DOMAIN/$ADMIN_ROUTE"
+
+if $IS_IP; then
+    echo "   Главная страница: http://$DOMAIN:8080"
+    echo "   Админ-панель: http://$DOMAIN:8080/$ADMIN_ROUTE"
+elif $USE_SSL; then
+    echo "   Админ-панель: https://$DOMAIN/$ADMIN_ROUTE"
 else
-  echo "   Админ-панель: http://$DOMAIN:8080/$ADMIN_ROUTE"
+    echo "   Админ-панель: http://$DOMAIN:8080/$ADMIN_ROUTE"
 fi
+
 echo ""
 echo "🔑 Пароль по умолчанию для админ-панели: admin123"
 echo "❗ Рекомендуется сменить его в интерфейсе после первого входа."

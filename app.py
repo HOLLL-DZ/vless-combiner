@@ -26,7 +26,6 @@ def load_config():
         }
     with open(CONFIG_PATH, 'r', encoding='utf-8') as f:
         config = yaml.safe_load(f)
-        # Устанавливаем значения по умолчанию, если отсутствуют
         defaults = {
             "base_url": "http://localhost:8080",
             "admin_password": "admin123",
@@ -82,27 +81,17 @@ app = Flask(__name__)
 config_at_start = load_config()
 ADMIN_ROUTE = config_at_start.get('admin_route', 'admin').lstrip('/')
 
+# === Маршруты ===
+@app.route('/')
+def index():
+    config = load_config()
+    return render_template('index.html', groups=config.get('groups', {}), base_url=config['base_url'])
+
 @app.route(f'/{ADMIN_ROUTE}')
 @requires_auth
 def admin_view():
     config = load_config()
-    return render_template('admin.html', groups=config.get('groups', {}), config=config)
-
-@app.route('/')
-def index():
-    config = load_config()
-    return render_template('index.html', groups=config.get('groups', {}))
-
-# === Динамический маршрут админки ===
-@app.route('/test-admin')
-@requires_auth
-def test_admin():
-    config = load_config()
-    return render_template('admin.html', groups=config.get('groups', {}), config=config)
-
-def admin_view():
-    config = load_config()
-    return render_template('admin.html', groups=config.get('groups', {}), config=config)
+    return render_template('admin.html', groups=config.get('groups', {}), base_url=config['base_url'])
 
 # === API ===
 @app.route('/api/save', methods=['POST'])
@@ -186,7 +175,7 @@ def api_config():
         }
     }
     return jsonify(safe_config)
-    
+
 @app.route('/<group_id>')
 def serve_group(group_id):
     config = load_config()
@@ -201,16 +190,13 @@ def serve_group(group_id):
     if not urls:
         return "No URLs in this group", 404
     
-    # Собираем все прокси
     all_lines = fetch_and_combine(urls)
     
     if not all_lines:
         return "No valid proxies found", 404
     
-    # Кодируем в Base64
     combined_text = "\n".join(all_lines)
     encoded = base64.b64encode(combined_text.encode('utf-8')).decode('utf-8')
-    
     return Response(encoded, mimetype='text/plain')
 
 # === Запуск ===
