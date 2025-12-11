@@ -464,32 +464,35 @@
         let groupIdCounter = {{ groups|length }} + 1;
 
         // === Точное московское время (UTC+3) ===
-        function updateMoscowTime() {
-            const now = new Date();
-            const mskTime = new Date(now.getTime() + (3 * 60 * 60 * 1000));
-            const timeStr = mskTime.toLocaleTimeString('ru-RU', {
-                timeZone: 'Europe/Moscow',
-                hour12: false,
-                hour: '2-digit',
-                minute: '2-digit'
-            });
-            const dateStr = mskTime.toLocaleDateString('ru-RU', {
-                timeZone: 'Europe/Moscow',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric'
-            });
+function updateMoscowTime() {
+    const now = new Date(); // текущее системное время
 
-            document.getElementById('moscow-time').textContent = `${dateStr} ${timeStr}`;
+    // Форматируем **напрямую** в часовом поясе Москвы — без ручного смещения!
+    const timeStr = now.toLocaleTimeString('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        hour12: false,
+        hour: '2-digit',
+        minute: '2-digit'
+    });
 
-            // Обновляем каждую минуту
-            const nextMinute = new Date(now);
-            nextMinute.setSeconds(0, 0);
-            nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-            const delayMs = nextMinute.getTime() - now.getTime();
-            setTimeout(updateMoscowTime, delayMs);
-        }
+    const dateStr = now.toLocaleDateString('ru-RU', {
+        timeZone: 'Europe/Moscow',
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+    });
 
+    document.getElementById('moscow-time').textContent = `${dateStr} ${timeStr}`;
+
+    // Обновляем каждую минуту
+    const nowAgain = new Date(); // важно взять актуальное время снова
+    const nextMinute = new Date(nowAgain);
+    nextMinute.setSeconds(0, 0);
+    nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+    const delayMs = nextMinute.getTime() - nowAgain.getTime();
+
+    setTimeout(updateMoscowTime, delayMs);
+}
         // === Получение публичного IP ===
         function fetchPublicIP() {
             fetch('https://api.ipify.org?format=json') // Исправлен URL - убран пробел
