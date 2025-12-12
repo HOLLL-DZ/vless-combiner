@@ -345,8 +345,16 @@
             border-color: var(--secondary);
         }
 
-        .password-section {
+        .password-section,
+        .import-export-section {
             margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        #import-status {
+            margin-top: 10px;
+            font-size: 14px;
         }
 
         @media (max-width: 768px) {
@@ -387,25 +395,44 @@
     </div>
 
     <div class="base-url-section">
-        <div class="form-group">
-            <label class="form-label">Базовый URL подписок:</label>
-            <input type="text" id="base-url-input" class="base-url-input" placeholder="https://ваш-домен.ру" value="{{ base_url }}">
-        </div>
-
-        <button class="btn btn-primary" onclick="updateBaseUrl()">
-            <i class="fas fa-check"></i> Применить
+    <div class="form-group">
+	<!-- 🔽 БЛОК ИМПОРТА/ЭКСПОРТА — КОМПАКТНЫЙ В ПРАВОМ УГЛУ -->
+    <div class="import-export-actions" style="margin-top: 0px; display: flex; gap: 8px; justify-content: flex-end;">
+        <button class="btn btn-success" onclick="exportConfig()" style="padding: 6px 12px; font-size: 13px;">
+            <i class="fas fa-file-export"></i> Экспорт
         </button>
-
-        <div class="password-section">
-            <div class="form-group">
-                <label class="form-label">Новый пароль для доступа к панели:</label>
-                <input type="password" id="new-password" class="base-url-input" placeholder="Новый пароль (мин. 4 символа)">
-            </div>
-            <button class="btn btn-danger" onclick="changePassword()">
-                <i class="fas fa-lock"></i> Сменить пароль
-            </button>
-        </div>
+        <label class="btn btn-primary" style="cursor: pointer; padding: 6px 12px; font-size: 13px;">
+            <i class="fas fa-file-import"></i> Импорт
+            <input type="file" id="import-config-file" accept=".yaml,.yml" style="display: none;" onchange="importConfig(this.files[0])">
+        </label>
     </div>
+    <div id="import-status" style="margin-top: 0px; font-size: 12px; text-align: right;"></div>
+    <!-- 🔼 КОНЕЦ БЛОКА -->
+        <label class="form-label">Базовый URL подписок:</label>
+        <input type="text" id="base-url-input" class="base-url-input" placeholder="https://ваш-домен.ру" value="{{ base_url }}">
+    </div>
+
+    <button class="btn btn-primary" onclick="updateBaseUrl()">
+        <i class="fas fa-check"></i> Применить
+    </button>
+
+    <div class="password-section">
+        <div class="form-group">
+            <label class="form-label">Новый пароль для доступа к панели:</label>
+            <input type="password" id="new-password" class="base-url-input" placeholder="Новый пароль (мин. 4 символа)">
+        </div>
+        <button class="btn btn-danger" onclick="changePassword()">
+            <i class="fas fa-lock"></i> Сменить пароль
+        </button>
+    </div>
+
+    
+
+</div>
+
+    
+
+</div>
 
     <div class="actions">
         <button class="btn btn-success" onclick="addGroup()">
@@ -459,48 +486,36 @@
     </div>
 
     <script>
-        // Передаем base_url из Jinja2 в JavaScript
         const BASE_URL = "{{ base_url }}";
         let currentBaseUrl = BASE_URL;
         let groupIdCounter = {{ groups|length }} + 1;
 
-        // === Точное московское время (UTC+3) ===
-function updateMoscowTime() {
-    const now = new Date(); // текущее системное время
+        function updateMoscowTime() {
+            const now = new Date();
+            const timeStr = now.toLocaleTimeString('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                hour12: false,
+                hour: '2-digit',
+                minute: '2-digit'
+            });
+            const dateStr = now.toLocaleDateString('ru-RU', {
+                timeZone: 'Europe/Moscow',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric'
+            });
+            document.getElementById('moscow-time').textContent = `${dateStr} ${timeStr}`;
+            const nowAgain = new Date();
+            const nextMinute = new Date(nowAgain);
+            nextMinute.setSeconds(0, 0);
+            nextMinute.setMinutes(nextMinute.getMinutes() + 1);
+            const delayMs = nextMinute.getTime() - nowAgain.getTime();
+            setTimeout(updateMoscowTime, delayMs);
+        }
 
-    // Форматируем **напрямую** в часовом поясе Москвы — без ручного смещения!
-    const timeStr = now.toLocaleTimeString('ru-RU', {
-        timeZone: 'Europe/Moscow',
-        hour12: false,
-        hour: '2-digit',
-        minute: '2-digit'
-    });
-
-    const dateStr = now.toLocaleDateString('ru-RU', {
-        timeZone: 'Europe/Moscow',
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
-
-    document.getElementById('moscow-time').textContent = `${dateStr} ${timeStr}`;
-
-    // Обновляем каждую минуту
-    const nowAgain = new Date(); // важно взять актуальное время снова
-    const nextMinute = new Date(nowAgain);
-    nextMinute.setSeconds(0, 0);
-    nextMinute.setMinutes(nextMinute.getMinutes() + 1);
-    const delayMs = nextMinute.getTime() - nowAgain.getTime();
-
-    setTimeout(updateMoscowTime, delayMs);
-}
-        // === Получение публичного IP ===
         function fetchPublicIP() {
-            fetch('https://api.ipify.org?format=json') // Исправлен URL - убран пробел
-                .then(r => {
-                    if (!r.ok) throw new Error('Ошибка получения IP');
-                    return r.json();
-                })
+            fetch('https://api.ipify.org?format=json')
+                .then(r => r.ok ? r.json() : Promise.reject())
                 .then(data => {
                     document.getElementById('public-ip').textContent = data.ip;
                 })
@@ -509,69 +524,45 @@ function updateMoscowTime() {
                 });
         }
 
-        // === Копирование IP ===
         function copyIP() {
             const ipElement = document.getElementById('public-ip');
-            if (!ipElement) {
-                alert('❌ Элемент IP не найден');
-                return;
-            }
-            
-            const ip = ipElement.textContent.trim();
+            const ip = ipElement?.textContent?.trim();
             if (!ip || ip.includes('Загрузка') || ip.includes('Не удалось')) {
-                alert('❌ IP еще не загружен или произошла ошибка');
+                alert('❌ IP ещё не загружен');
                 return;
             }
-            
             copyToClipboard(ip, 'IP скопирован: ' + ip);
         }
 
-        // === Общая функция копирования с fallback ===
         function copyToClipboard(text, successMessage) {
-            if (!text || text.trim() === '') {
-                alert('❌ Пустой текст для копирования');
+            if (!text?.trim()) {
+                alert('❌ Пустой текст');
                 return;
             }
-
-            // Сначала пытаемся использовать современный API
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(text)
-                    .then(() => {
-                        alert('✅ ' + (successMessage || 'Скопировано: ' + text));
-                    })
-                    .catch(err => {
-                        console.error('Clipboard API error:', err);
-                        fallbackCopy(text, successMessage);
-                    });
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(() => {
+                    alert('✅ ' + (successMessage || 'Скопировано'));
+                }).catch(() => fallbackCopy(text, successMessage));
             } else {
-                // Если нет доступа к Clipboard API - используем fallback
                 fallbackCopy(text, successMessage);
             }
         }
 
-        // === Fallback-метод копирования для HTTP ===
         function fallbackCopy(text, successMessage) {
-            // Создаем временный textarea
             const textarea = document.createElement('textarea');
             textarea.value = text;
             textarea.style.position = 'fixed';
             textarea.style.left = '-9999px';
-            textarea.style.top = '-9999px';
             document.body.appendChild(textarea);
-            
-            textarea.focus();
             textarea.select();
-            
             try {
-                const success = document.execCommand('copy');
-                if (success) {
-                    alert('✅ ' + (successMessage || 'Скопировано: ' + text));
+                if (document.execCommand('copy')) {
+                    alert('✅ ' + (successMessage || 'Скопировано (через execCommand)'));
                 } else {
-                    alert('⚠️ Скопировано, но используйте другой браузер для лучшей работы');
+                    alert('⚠️ Скопировано, но без уведомления');
                 }
             } catch (err) {
-                console.error('Fallback copy error:', err);
-                alert('❌ Не удалось скопировать. Пожалуйста, скопируйте вручную:\n' + text);
+                alert('❌ Не удалось скопировать: ' + err.message);
             } finally {
                 document.body.removeChild(textarea);
             }
@@ -583,15 +574,12 @@ function updateMoscowTime() {
                 alert('❌ URL не может быть пустым');
                 return;
             }
-            
-            // Проверка формата URL
             try {
                 new URL(newUrl);
             } catch (e) {
-                alert('❌ Некорректный формат URL. Пример: http://ваш-домен.ru');
+                alert('❌ Некорректный формат URL');
                 return;
             }
-            
             currentBaseUrl = newUrl;
             updateAllLinks();
             alert('✅ Базовый URL обновлён');
@@ -607,28 +595,17 @@ function updateMoscowTime() {
         }
 
         function copyLink(elementId) {
-            const linkElement = document.getElementById(elementId);
-            if (!linkElement) {
-                alert('❌ Элемент не найден: ' + elementId);
-                return;
-            }
-            
-            const text = linkElement.textContent.trim();
+            const el = document.getElementById(elementId);
+            const text = el?.textContent?.trim();
             if (!text) {
                 alert('❌ Ссылка пустая');
                 return;
             }
-            
-            copyToClipboard(text, 'Ссылка скопирована: ' + text);
+            copyToClipboard(text, 'Ссылка скопирована');
         }
 
         function addGroup() {
             const container = document.getElementById('groups-container');
-            if (!container) {
-                alert('❌ Контейнер групп не найден');
-                return;
-            }
-            
             const id = 'group' + (groupIdCounter++);
             const div = document.createElement('div');
             div.className = 'group-card';
@@ -659,11 +636,6 @@ function updateMoscowTime() {
 
         function addUrlToGroup(btn) {
             const urlsList = btn.parentElement.previousElementSibling;
-            if (!urlsList) {
-                alert('❌ Список URL не найден');
-                return;
-            }
-            
             const div = document.createElement('div');
             div.className = 'url-item';
             div.innerHTML = `
@@ -681,48 +653,31 @@ function updateMoscowTime() {
 
         function deleteGroup(btn) {
             if (!confirm('Удалить группу? Это действие нельзя отменить.')) return;
-            const groupCard = btn.closest('.group-card');
-            if (groupCard) {
-                groupCard.remove();
-            }
+            btn.closest('.group-card')?.remove();
         }
 
         function checkServer(btn) {
             const input = btn.previousElementSibling;
             const url = input.value.trim();
             const statusDiv = btn.nextElementSibling;
-            
             if (!url) {
                 statusDiv.textContent = "URL пуст";
                 statusDiv.className = "check-status error";
                 return;
             }
-            
             statusDiv.textContent = "Проверка...";
             statusDiv.className = "check-status";
-            
             fetch('/api/check-server', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ url: url })
             })
-            .then(r => {
-                if (!r.ok) {
-                    throw new Error('Сервер вернул ошибку: ' + r.status);
-                }
-                return r.json();
-            })
+            .then(r => r.ok ? r.json() : Promise.reject('Сервер вернул ошибку: ' + r.status))
             .then(data => {
-                if (data.status === 'success') {
-                    statusDiv.textContent = "✅ " + data.message;
-                    statusDiv.className = "check-status success";
-                } else {
-                    statusDiv.textContent = "❌ " + (data.message || 'Ошибка сервера');
-                    statusDiv.className = "check-status error";
-                }
+                statusDiv.textContent = (data.status === 'success' ? '✅ ' : '❌ ') + data.message;
+                statusDiv.className = "check-status " + (data.status === 'success' ? 'success' : 'error');
             })
             .catch(err => {
-                console.error('Check server error:', err);
                 statusDiv.textContent = "❌ Ошибка: " + (err.message || 'Неизвестная ошибка');
                 statusDiv.className = "check-status error";
             });
@@ -730,44 +685,22 @@ function updateMoscowTime() {
 
         function saveConfig() {
             const groups = {};
-            const groupCards = document.querySelectorAll('.group-card');
-            
-            for (const card of groupCards) {
-                const idInput = card.querySelector('.group-id');
-                const id = idInput.value.trim();
-                
-                if (!id) {
-                    alert('❌ Все группы должны иметь ID');
-                    return;
-                }
-                
-                if (groups[id]) {
-                    alert(`❌ Дублирование ID группы: ${id}`);
-                    return;
-                }
-                
-                const urls = [];
-                card.querySelectorAll('.url-input').forEach(inp => {
-                    const url = inp.value.trim();
-                    if (url) urls.push(url);
-                });
-                
+            document.querySelectorAll('.group-card').forEach(card => {
+                const id = card.querySelector('.group-id').value.trim();
+                if (!id) throw new Error('Все группы должны иметь ID');
+                if (groups[id]) throw new Error(`Дублирование ID: ${id}`);
+                const urls = Array.from(card.querySelectorAll('.url-input'))
+                    .map(inp => inp.value.trim())
+                    .filter(v => v);
                 groups[id] = { urls };
-            }
+            });
 
             fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action: "save_config",
-                    groups: groups,
-                    base_url: currentBaseUrl
-                })
+                body: JSON.stringify({ action: "save_config", groups, base_url: currentBaseUrl })
             })
-            .then(r => {
-                if (!r.ok) throw new Error('Ошибка сохранения');
-                return r.json();
-            })
+            .then(r => r.ok ? r.json() : Promise.reject())
             .then(data => {
                 if (data.status === "ok") {
                     alert('✅ Сохранено!');
@@ -777,34 +710,23 @@ function updateMoscowTime() {
                 }
             })
             .catch(err => {
-                console.error('Save error:', err);
                 alert('❌ Ошибка сохранения: ' + (err.message || 'Неизвестная ошибка'));
             });
         }
 
         function changePassword() {
             const newPass = document.getElementById('new-password').value.trim();
-            if (!newPass || newPass.length < 4) {
+            if (newPass.length < 4) {
                 alert('❌ Пароль должен содержать минимум 4 символа');
                 return;
             }
-            
-            if (!confirm('⚠️ После смены пароля потребуется повторный вход. Продолжить?')) {
-                return;
-            }
-            
+            if (!confirm('⚠️ После смены пароля потребуется повторный вход. Продолжить?')) return;
             fetch('/api/save', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ 
-                    action: "change_password",
-                    new_password: newPass
-                })
+                body: JSON.stringify({ action: "change_password", new_password: newPass })
             })
-            .then(r => {
-                if (!r.ok) throw new Error('Ошибка сервера');
-                return r.json();
-            })
+            .then(r => r.ok ? r.json() : Promise.reject())
             .then(data => {
                 if (data.status === "ok") {
                     alert('✅ Пароль изменён! Выполняю выход...');
@@ -814,8 +736,41 @@ function updateMoscowTime() {
                 }
             })
             .catch(err => {
-                console.error('Password change error:', err);
                 alert('❌ ' + (err.message || 'Ошибка при смене пароля'));
+            });
+        }
+
+        // === НОВЫЕ ФУНКЦИИ ИМПОРТА/ЭКСПОРТА ===
+        function exportConfig() {
+            window.location.href = '/api/export-config';
+        }
+
+        function importConfig(file) {
+            if (!file) return;
+            const formData = new FormData();
+            formData.append('file', file);
+            const statusDiv = document.getElementById('import-status');
+            statusDiv.textContent = 'Загрузка...';
+            statusDiv.style.color = 'var(--dark)';
+
+            fetch('/api/import-config', {
+                method: 'POST',
+                body: formData
+            })
+            .then(r => r.json())
+            .then(data => {
+                if (data.status === 'ok') {
+                    statusDiv.style.color = 'var(--success)';
+                    statusDiv.innerHTML = '✅ ' + data.message + ' <br> Страница перезагрузится через 2 секунды.';
+                    setTimeout(() => location.reload(), 2000);
+                } else {
+                    statusDiv.style.color = 'var(--danger)';
+                    statusDiv.textContent = '❌ ' + (data.error || 'Неизвестная ошибка');
+                }
+            })
+            .catch(err => {
+                statusDiv.style.color = 'var(--danger)';
+                statusDiv.textContent = '❌ Ошибка: ' + (err.message || 'Не удалось загрузить файл');
             });
         }
 
