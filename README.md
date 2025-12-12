@@ -3,7 +3,7 @@
 <li>Простой объединитель подписок vless с разных серверов.</li>
 <li>Обновляет подписки в приложении по запросу в реальном времени.</li>
 <li>Имеет веб интерфейс с настройками и редактором.</li>
-<img width="1207" height="851" alt="2025-12-12_09-46-11" src="https://github.com/user-attachments/assets/3ee84990-4d06-4af2-95b0-9cf0a751f922  " />
+<img width="1283" height="919" alt="image" src="https://github.com/user-attachments/assets/e20547c4-03e5-4a84-97a0-c7abf4ba4a76" />
 
 
 Установка:
