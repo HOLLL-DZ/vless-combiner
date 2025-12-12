@@ -3,7 +3,7 @@ import os
 import yaml
 import base64
 import requests
-from flask import Flask, render_template, request, Response, jsonify
+from flask import Flask, render_template, request, Response, jsonify, send_file
 from functools import wraps
 from urllib.parse import urlparse
 import socket
@@ -67,37 +67,25 @@ def fetch_and_combine(urls):
         try:
             resp = requests.get(url, timeout=10)
             if resp.status_code == 200:
-                # Проверяем Content-Type
                 content_type = resp.headers.get('Content-Type', '').lower()
-                
-                # Случай 1: Чистый текст с Base64 (как в официальных подписках)
                 if 'text/plain' in content_type:
-                    # Пробуем декодировать как Base64
                     try:
                         decoded = base64.b64decode(resp.text).decode('utf-8')
                         lines = [line.strip() for line in decoded.split('\n') if line.strip()]
                         all_lines.extend(lines)
                     except:
-                        # Если не Base64 - проверяем на наличие прокси-ссылок
                         lines = [line.strip() for line in resp.text.split('\n') if line.strip() and ('://' in line)]
                         all_lines.extend(lines)
-                # Случай 2: HTML-страница
                 elif 'text/html' in content_type:
-                    # Извлекаем прокси из HTML
-                    content = resp.text
-                    # Поиск прокси-ссылок в тексте
                     import re
-                    proxy_links = re.findall(r'(vless://[^\s\'"]+|vmess://[^\s\'"]+|trojan://[^\s\'"]+)', content)
+                    proxy_links = re.findall(r'(vless://[^\s\'"]+|vmess://[^\s\'"]+|trojan://[^\s\'"]+)', resp.text)
                     all_lines.extend(proxy_links)
-                # Случай 3: Неизвестный формат - пытаемся обработать как текст
                 else:
-                    # Проверяем на Base64
                     try:
                         decoded = base64.b64decode(resp.text).decode('utf-8')
                         lines = [line.strip() for line in decoded.split('\n') if line.strip()]
                         all_lines.extend(lines)
                     except:
-                        # Ищем прямые ссылки
                         lines = [line.strip() for line in resp.text.split('\n') if line.strip() and ('://' in line)]
                         all_lines.extend(lines)
         except Exception as e:
@@ -107,7 +95,6 @@ def fetch_and_combine(urls):
 # === Инициализация Flask ===
 app = Flask(__name__, template_folder='.')
 
-# Загружаем маршрут админ-панели при старте
 config_at_start = load_config()
 ADMIN_ROUTE = config_at_start.get('admin_route', 'admin').lstrip('/')
 
@@ -166,9 +153,7 @@ def api_check_server():
         return jsonify({"status": "error", "message": "URL is required"}), 400
     
     try:
-        # Выполняем запрос без предварительного проверки сокета
         resp = requests.get(url, timeout=10)
-        
         if resp.status_code != 200:
             return jsonify({
                 "status": "error", 
@@ -176,12 +161,10 @@ def api_check_server():
                 "sample": resp.text[:100] + "..." if resp.text else ""
             })
         
-        # Анализируем ответ
         content = resp.text.strip()
         content_type = resp.headers.get('Content-Type', '').lower()
         content_length = len(content)
         
-        # Случай 1: Base64 подписка
         if 'text/plain' in content_type:
             try:
                 decoded = base64.b64decode(content).decode('utf-8')
@@ -190,7 +173,7 @@ def api_check_server():
                     return jsonify({
                         "status": "success", 
                         "message": f"Base64 OK ({len(lines)} proxies)",
-                        "sample": lines[0][:50] + "..." if lines[0] else "",
+                        "sample": lines[0][:50] + "...",
                         "contentType": "base64"
                     })
                 return jsonify({
@@ -198,14 +181,13 @@ def api_check_server():
                     "message": "Base64 decoded but no valid proxies found",
                     "sample": content[:100] + "..."
                 })
-            except Exception as e:
-                # Не Base64, но может содержать прямые ссылки
+            except:
                 lines = [line.strip() for line in content.split('\n') if line.strip() and ('://' in line)]
                 if lines:
                     return jsonify({
                         "status": "success", 
                         "message": f"Direct links OK ({len(lines)} proxies)",
-                        "sample": lines[0][:50] + "..." if lines[0] else "",
+                        "sample": lines[0][:50] + "...",
                         "contentType": "direct_links"
                     })
                 return jsonify({
@@ -215,9 +197,7 @@ def api_check_server():
                     "contentType": "unknown_text"
                 })
         
-        # Случай 2: HTML-страница
         if 'text/html' in content_type or '<html' in content.lower():
-            # Поиск прокси-ссылок в HTML
             import re
             proxy_links = re.findall(r'(vless://[^\s\'"]+|vmess://[^\s\'"]+|trojan://[^\s\'"]+)', content)
             if proxy_links:
@@ -234,7 +214,6 @@ def api_check_server():
                 "contentType": "html_no_proxies"
             })
         
-        # Случай 3: JSON
         if 'application/json' in content_type:
             try:
                 json_data = json.loads(content)
@@ -252,7 +231,6 @@ def api_check_server():
                     "contentType": "json_like"
                 })
         
-        # Случай 4: Неизвестный формат
         return jsonify({
             "status": "warning",
             "message": f"Unknown content type: {content_type}",
@@ -261,29 +239,13 @@ def api_check_server():
         })
     
     except requests.exceptions.ConnectionError as e:
-        return jsonify({
-            "status": "error", 
-            "message": f"Connection error: {str(e)}",
-            "details": str(e)
-        })
-    except requests.exceptions.Timeout as e:
-        return jsonify({
-            "status": "error", 
-            "message": "Request timed out (10s)",
-            "details": str(e)
-        })
+        return jsonify({"status": "error", "message": f"Connection error: {str(e)}"})
+    except requests.exceptions.Timeout:
+        return jsonify({"status": "error", "message": "Request timed out (10s)"})
     except requests.exceptions.RequestException as e:
-        return jsonify({
-            "status": "error", 
-            "message": f"Request error: {str(e)}",
-            "details": str(e)
-        })
+        return jsonify({"status": "error", "message": f"Request error: {str(e)}"})
     except Exception as e:
-        return jsonify({
-            "status": "error", 
-            "message": f"Processing error: {str(e)}",
-            "details": str(e)
-        })
+        return jsonify({"status": "error", "message": f"Processing error: {str(e)}"})
 
 @app.route('/api/groups')
 def api_groups():
@@ -324,17 +286,74 @@ def serve_group(group_id):
     if not urls:
         return "No URLs in this group", 404
     
-    # Собираем все прокси
     all_lines = fetch_and_combine(urls)
     
     if not all_lines:
         return "No valid proxies found", 404
     
-    # Кодируем в Base64
     combined_text = "\n".join(all_lines)
     encoded = base64.b64encode(combined_text.encode('utf-8')).decode('utf-8')
     
     return Response(encoded, mimetype='text/plain')
+
+# === НОВЫЕ ЭНДПОИНТЫ: ИМПОРТ / ЭКСПОРТ ===
+@app.route('/api/export-config')
+@requires_auth
+def api_export_config():
+    if not os.path.exists(CONFIG_PATH):
+        # Если файла нет — отдаём дефолтный YAML
+        default = {
+            "base_url": "http://localhost:8080",
+            "admin_password": "admin123",
+            "admin_route": "admin",
+            "port": 8080,
+            "groups": {}
+        }
+        data = yaml.dump(default, allow_unicode=True, default_flow_style=False, indent=2)
+        return Response(
+            data,
+            mimetype='application/x-yaml',
+            headers={"Content-Disposition": "attachment;filename=config.yaml"}
+        )
+    # Иначе — читаем реальный файл с диска
+    with open(CONFIG_PATH, 'rb') as f:
+        data = f.read()
+    return Response(
+        data,
+        mimetype='application/x-yaml',
+        headers={"Content-Disposition": "attachment;filename=config.yaml"}
+    )
+
+@app.route('/api/import-config', methods=['POST'])
+@requires_auth
+def api_import_config():
+    if 'file' not in request.files:
+        return jsonify({"error": "No file provided"}), 400
+    file = request.files['file']
+    if file.filename == '':
+        return jsonify({"error": "Empty filename"}), 400
+    if not (file.filename.endswith('.yaml') or file.filename.endswith('.yml')):
+        return jsonify({"error": "Only .yaml or .yml files allowed"}), 400
+
+    try:
+        content = file.read().decode('utf-8')
+        config = yaml.safe_load(content)
+        if config is None:
+            return jsonify({"error": "YAML is empty or invalid"}), 400
+        if not isinstance(config, dict):
+            return jsonify({"error": "YAML root must be an object"}), 400
+
+        # Перезаписываем файл на диске
+        with open(CONFIG_PATH, 'w', encoding='utf-8') as f:
+            f.write(content)
+
+        return jsonify({"status": "ok", "message": "Config imported successfully"})
+    except yaml.YAMLError as e:
+        return jsonify({"error": f"Invalid YAML syntax: {str(e)}"}), 400
+    except UnicodeDecodeError:
+        return jsonify({"error": "File must be UTF-8 encoded"}), 400
+    except Exception as e:
+        return jsonify({"error": f"Failed to save config: {str(e)}"}), 500
 
 # === Запуск ===
 if __name__ == '__main__':

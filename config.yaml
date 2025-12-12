@@ -5,6 +5,6 @@ groups:
   group1:
     name: group1
     urls:
-    - https://test-1.com
+    - https://test-2.com
     - https://test-2.com
 port: 8080
