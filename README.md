@@ -6,4 +6,8 @@
 
 Установка
 
-wget https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/install.sh && chmod +x install.sh && sudo ./install.sh
+```javascript
+function hello() {
+  console.log("wget https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/install.sh && chmod +x install.sh && sudo ./install.sh");
+}
+```
