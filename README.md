@@ -11,6 +11,17 @@
 ```javascript
 wget https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/install.sh   && chmod +x install.sh && sudo ./install.sh
 ```
+<p>Скрипт автоматически:</p>
+<ul>
+  <li>Установит Docker, Nginx и Certbot</li>
+  <li>Настроит HTTPS через Let's Encrypt</li>
+  <li>Запустит приложение в контейнере Docker</li>
+  <li>Настроит проксирование через Nginx</li>
+</ul>
+<p>После установки вы получите ссылку вида:</p>
+<p><code>https://your-domain.com/your-secret-path</code></p>
+
+
 
 Удалить с сервера:
 ```javascript
