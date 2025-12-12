@@ -2,7 +2,7 @@
 
 set -e
 
-echo "🚀 Устанавливаю VLESS Combiner от HOLLL-DZ..."
+echo "🚀 Установка VLESS Combiner от HOLLL-DZ..."
 
 # Проверка root
 if [ "$EUID" -ne 0 ]; then
@@ -63,19 +63,19 @@ ADMIN_ROUTE=$(echo "$ADMIN_PATH" | sed 's|[^a-zA-Z0-9_./-]||g; s|^/||; s|/$||')
 
 # Установка Docker, если нет
 if ! command -v docker &> /dev/null; then
-    echo "📦 Устанавливаю Docker..."
+    echo "📦 Устанавка Docker..."
     apt update
     apt install -y docker.io
     systemctl enable --now docker
 fi
 
 # Установка Nginx
-echo "🔧 Устанавливаю Nginx..."
+echo "🔧 Устанавка Nginx..."
 apt install -y nginx
 
 # Certbot для SSL
 if $USE_SSL; then
-    echo "🔧 Устанавливаю Certbot..."
+    echo "🔧 Установка Certbot..."
     apt install -y certbot python3-certbot-nginx
 fi
 
@@ -146,7 +146,7 @@ fi
 chown -R "$(logname):$(logname)" "$DEPLOY_DIR"
 
 # Запуск контейнера
-echo "🐳 Запускаю контейнер..."
+echo "🐳 Запуск контейнера..."
 docker stop vless-combiner 2>/dev/null || true
 docker rm vless-combiner 2>/dev/null || true
 
@@ -164,7 +164,7 @@ docker run -d \
   "
 
 # Конфиг Nginx
-echo "📝 Настраиваю Nginx..."
+echo "📝 Настройка Nginx..."
 NGINX_CONF="/etc/nginx/sites-available/$DOMAIN"
 cat > "$NGINX_CONF" << NGINX_EOF
 server {
@@ -192,7 +192,7 @@ nginx -t && systemctl reload nginx
 
 # SSL
 if $USE_SSL; then
-    echo "🔐 Получаю SSL-сертификат от Let's Encrypt..."
+    echo "🔐 Установка SSL-сертификат от Let's Encrypt..."
     certbot --nginx -d "$DOMAIN" --non-interactive --agree-tos --email "admin@$DOMAIN" || {
         echo "⚠️ Certbot не смог получить сертификат. Возможно, DNS не настроен."
     }
@@ -211,6 +211,7 @@ else
 fi
 
 echo ""
+echo "🔑 Логин: Admin (как пример, можно любой)"
 echo "🔑 Пароль по умолчанию: admin123"
 echo "❗ Смените его в админ-панели после входа."
 echo ""

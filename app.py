@@ -81,7 +81,7 @@ def fetch_and_combine(urls):
                         # Если не Base64 - проверяем на наличие прокси-ссылок
                         lines = [line.strip() for line in resp.text.split('\n') if line.strip() and ('://' in line)]
                         all_lines.extend(lines)
-                # Случай 2: HTML-страница (как в r.fast.net.ru)
+                # Случай 2: HTML-страница
                 elif 'text/html' in content_type:
                     # Извлекаем прокси из HTML
                     content = resp.text
@@ -107,7 +107,7 @@ def fetch_and_combine(urls):
 # === Инициализация Flask ===
 app = Flask(__name__, template_folder='.')
 
-# Загружаем маршрут админки при старте
+# Загружаем маршрут админ-панели при старте
 config_at_start = load_config()
 ADMIN_ROUTE = config_at_start.get('admin_route', 'admin').lstrip('/')
 

@@ -1,10 +1,10 @@
 admin_password: admin123
 admin_route: admin
-base_url: http://0.0.0.0:8080
+base_url: http://test-my-site.com:8080
 groups:
   group1:
     name: group1
     urls:
-    - https://test.com
-    - https://test2.com
+    - https://test-1.com
+    - https://test-2.com
 port: 8080
