@@ -1,8 +1,8 @@
 # VLESS Combiner
 
-Простой объединитель подписок vless с разных серверов.
-Обновляет подписки в приложении по запросу в реальном времени.
-Имеет веб интерфейс с настройками и редактором.
+<li>Простой объединитель подписок vless с разных серверов.</li>
+<li>Обновляет подписки в приложении по запросу в реальном времени.</li>
+<li>Имеет веб интерфейс с настройками и редактором.</li>
 <img width="1207" height="851" alt="2025-12-12_09-46-11" src="https://github.com/user-attachments/assets/3ee84990-4d06-4af2-95b0-9cf0a751f922  " />
 
 
@@ -56,4 +56,4 @@ curl -s -O https://raw.githubusercontent.com/HOLLL-DZ/vless-combiner/main/templa
 sudo docker restart vless-combiner
 ```
 
-ТГ канал: https://t.me/vless_combiner  
+Telegram-канал: https://t.me/vless_combiner  
