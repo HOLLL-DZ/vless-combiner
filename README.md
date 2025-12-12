@@ -44,5 +44,3 @@ sudo docker restart vless-combiner
 ```
 
 ТГ канал: https://t.me/vless_combiner  
-
-добавь большими буквами имя проекта вверху, можешь отредактировать код по своему вкусу
